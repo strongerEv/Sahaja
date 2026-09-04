@@ -3,7 +3,12 @@
 import { useEffect, useState } from 'react';
 import type { Dict } from '@/lib/i18n';
 import { formatDate, formatTime } from '@/lib/format';
-import type { Invitation, InvitationMedia, LoveStoryItem } from '@/lib/types/database';
+import type {
+  GalleryLayout,
+  Invitation,
+  InvitationMedia,
+  LoveStoryItem,
+} from '@/lib/types/database';
 
 export function SectionShell({
   title,
@@ -274,9 +279,51 @@ export function EventsSection({ invitation, dict }: { invitation: Invitation; di
   );
 }
 
-export function GallerySection({ media, dict }: { media: InvitationMedia[]; dict: Dict }) {
+function GalleryItem({
+  item,
+  className,
+  onOpen,
+}: {
+  item: InvitationMedia;
+  className: string;
+  onOpen: (item: InvitationMedia) => void;
+}) {
+  if (item.type === 'video') {
+    return <video src={item.url} controls muted playsInline className={className} />;
+  }
+  return (
+    <button type="button" onClick={() => onOpen(item)} className="block w-full overflow-hidden rounded-xl">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={item.url}
+        alt={item.caption ?? ''}
+        loading="lazy"
+        className={`${className} transition hover:scale-105`}
+      />
+    </button>
+  );
+}
+
+export function GallerySection({
+  media,
+  dict,
+  layout,
+  columns,
+  limit,
+}: {
+  media: InvitationMedia[];
+  dict: Dict;
+  layout: GalleryLayout;
+  columns: 2 | 3;
+  limit: number | null;
+}) {
   const [lightbox, setLightbox] = useState<InvitationMedia | null>(null);
-  if (!media.length) return null;
+
+  const shown = limit ? media.slice(0, limit) : media;
+  if (!shown.length) return null;
+
+  const gridCols = columns === 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3';
+  const masonryCols = columns === 2 ? 'columns-2' : 'columns-2 sm:columns-3';
 
   return (
     <>
@@ -286,35 +333,71 @@ export function GallerySection({ media, dict }: { media: InvitationMedia[]; dict
             {dict.gallery}
           </h2>
           <div className="theme-bg mx-auto mt-4 h-px w-16 opacity-40" />
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {media.map((item) =>
-              item.type === 'video' ? (
-                <video
+
+          {layout === 'grid' && (
+            <div className={`mt-8 grid gap-3 ${gridCols}`}>
+              {shown.map((item) => (
+                <GalleryItem
                   key={item.id}
-                  src={item.url}
-                  controls
-                  muted
-                  playsInline
+                  item={item}
+                  onOpen={setLightbox}
                   className="aspect-square w-full rounded-xl object-cover"
                 />
-              ) : (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setLightbox(item)}
-                  className="overflow-hidden rounded-xl"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.url}
-                    alt={item.caption ?? ''}
-                    loading="lazy"
-                    className="aspect-square w-full object-cover transition hover:scale-105"
+              ))}
+            </div>
+          )}
+
+          {layout === 'masonry' && (
+            // Kolom CSS membiarkan tiap foto memakai proporsi aslinya, jadi
+            // potret dan lanskap tidak ikut terpotong seperti pada grid.
+            <div className={`mt-8 gap-3 ${masonryCols}`} style={{ columnGap: '0.75rem' }}>
+              {shown.map((item) => (
+                <div key={item.id} className="mb-3 break-inside-avoid">
+                  <GalleryItem
+                    item={item}
+                    onOpen={setLightbox}
+                    className="w-full rounded-xl object-cover"
                   />
-                </button>
-              ),
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {layout === 'carousel' && (
+            <div className="-mx-6 mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2">
+              {shown.map((item) => (
+                <div key={item.id} className="w-[70%] shrink-0 snap-center sm:w-[45%]">
+                  <GalleryItem
+                    item={item}
+                    onOpen={setLightbox}
+                    className="aspect-[3/4] w-full rounded-xl object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {layout === 'highlight' && (
+            <div className="mt-8 space-y-3">
+              <GalleryItem
+                item={shown[0]}
+                onOpen={setLightbox}
+                className="aspect-[4/5] w-full rounded-xl object-cover sm:aspect-[16/10]"
+              />
+              {shown.length > 1 && (
+                <div className={`grid gap-3 ${gridCols}`}>
+                  {shown.slice(1).map((item) => (
+                    <GalleryItem
+                      key={item.id}
+                      item={item}
+                      onOpen={setLightbox}
+                      className="aspect-square w-full rounded-xl object-cover"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

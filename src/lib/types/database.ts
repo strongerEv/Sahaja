@@ -73,6 +73,9 @@ export interface Package {
   created_at: string;
 }
 
+/** Susunan foto pada section galeri. */
+export type GalleryLayout = 'grid' | 'masonry' | 'carousel' | 'highlight';
+
 /** Section yang bisa di-toggle tampil/sembunyi oleh pengantin. */
 export interface SectionsConfig {
   hero: boolean;
@@ -87,6 +90,13 @@ export interface SectionsConfig {
   closing: boolean;
   /** Urutan tampil section pada halaman publik. */
   order: SectionKey[];
+
+  /** Susunan foto galeri. */
+  gallery_layout: GalleryLayout;
+  /** Jumlah kolom untuk layout grid & masonry. */
+  gallery_columns: 2 | 3;
+  /** Batas foto yang ditampilkan; null berarti seluruhnya. */
+  gallery_limit: number | null;
 }
 
 export type SectionKey =

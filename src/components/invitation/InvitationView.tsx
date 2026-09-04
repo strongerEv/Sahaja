@@ -113,7 +113,16 @@ export default function InvitationView({
     couple: <CoupleSection key="couple" invitation={invitation} dict={dict} />,
     countdown: <CountdownSection key="countdown" invitation={invitation} dict={dict} />,
     events: <EventsSection key="events" invitation={invitation} dict={dict} />,
-    gallery: <GallerySection key="gallery" media={media} dict={dict} />,
+    gallery: (
+      <GallerySection
+        key="gallery"
+        media={media}
+        dict={dict}
+        layout={sections.gallery_layout}
+        columns={sections.gallery_columns}
+        limit={sections.gallery_limit}
+      />
+    ),
     love_story: <LoveStorySection key="love_story" invitation={invitation} dict={dict} />,
     rsvp: (
       <RsvpSection

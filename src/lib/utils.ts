@@ -1,5 +1,5 @@
 import { siteUrl } from '@/lib/site-url';
-import type { SectionKey, SectionsConfig } from '@/lib/types/database';
+import type { GalleryLayout, SectionKey, SectionsConfig } from '@/lib/types/database';
 
 export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -50,6 +50,22 @@ export const DEFAULT_SECTION_ORDER: SectionKey[] = [
   'closing',
 ];
 
+export const GALLERY_LAYOUTS: GalleryLayout[] = ['grid', 'masonry', 'carousel', 'highlight'];
+
+export const GALLERY_LAYOUT_LABELS: Record<GalleryLayout, string> = {
+  grid: 'Kotak seragam',
+  masonry: 'Tinggi bervariasi',
+  carousel: 'Geser samping',
+  highlight: 'Satu foto utama',
+};
+
+export const GALLERY_LAYOUT_HINTS: Record<GalleryLayout, string> = {
+  grid: 'Semua foto dipotong jadi kotak sama besar. Paling rapi dan mudah dibaca.',
+  masonry: 'Foto mengikuti proporsi aslinya, jadi potret dan lanskap tidak terpotong.',
+  carousel: 'Satu baris yang digeser ke samping. Halaman jadi lebih pendek.',
+  highlight: 'Satu foto besar di atas, sisanya menyusul sebagai kotak kecil.',
+};
+
 export const DEFAULT_SECTIONS: SectionsConfig = {
   hero: true,
   couple: true,
@@ -62,6 +78,9 @@ export const DEFAULT_SECTIONS: SectionsConfig = {
   envelope: true,
   closing: true,
   order: DEFAULT_SECTION_ORDER,
+  gallery_layout: 'grid',
+  gallery_columns: 3,
+  gallery_limit: null,
 };
 
 export const SECTION_LABELS: Record<SectionKey, string> = {
@@ -84,7 +103,20 @@ export function resolveSections(config: Partial<SectionsConfig> | null | undefin
     : DEFAULT_SECTION_ORDER;
   // Section baru yang belum ada di config lama tetap ikut tampil di akhir.
   const missing = DEFAULT_SECTION_ORDER.filter((key) => !order.includes(key));
-  return { ...merged, order: [...order, ...missing] };
+
+  // Nilai galeri dinormalkan supaya config lama (atau yang disunting manual)
+  // tidak menghasilkan layout yang tidak dikenal.
+  const limit = merged.gallery_limit;
+
+  return {
+    ...merged,
+    order: [...order, ...missing],
+    gallery_layout: GALLERY_LAYOUTS.includes(merged.gallery_layout)
+      ? merged.gallery_layout
+      : 'grid',
+    gallery_columns: merged.gallery_columns === 2 ? 2 : 3,
+    gallery_limit: typeof limit === 'number' && limit > 0 ? Math.min(limit, 60) : null,
+  };
 }
 
 export { siteUrl };

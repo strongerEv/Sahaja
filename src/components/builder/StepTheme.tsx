@@ -2,13 +2,69 @@
 
 import { useState } from 'react';
 import StepForm, { type StepSaveProps } from './StepForm';
-import { SECTION_LABELS } from '@/lib/utils';
-import type { Invitation, SectionKey, SectionsConfig } from '@/lib/types/database';
+import {
+  GALLERY_LAYOUTS,
+  GALLERY_LAYOUT_HINTS,
+  GALLERY_LAYOUT_LABELS,
+  SECTION_LABELS,
+  cn,
+} from '@/lib/utils';
+import type {
+  GalleryLayout,
+  Invitation,
+  SectionKey,
+  SectionsConfig,
+} from '@/lib/types/database';
 
 const PALETTE = ['#A6753F', '#B87A7A', '#1F6F5C', '#3F3A36', '#7B4B2A', '#4A6FA5', '#8E7CC3'];
 
 /** Section wajib tampil — mematikannya bikin undangan kehilangan konteks. */
 const LOCKED: SectionKey[] = ['hero'];
+
+/** Sketsa kecil tiap layout supaya pilihannya terbaca tanpa harus dicoba. */
+function GalleryLayoutPreview({ layout }: { layout: GalleryLayout }) {
+  const box = 'rounded-[2px] bg-brand-300';
+  return (
+    <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center">
+      {layout === 'grid' && (
+        <span className="grid h-7 w-7 grid-cols-3 grid-rows-3 gap-[2px]">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <span key={i} className={box} />
+          ))}
+        </span>
+      )}
+      {layout === 'masonry' && (
+        <span className="flex h-7 w-7 gap-[2px]">
+          <span className="flex flex-1 flex-col gap-[2px]">
+            <span className={`${box} h-3`} />
+            <span className={`${box} flex-1`} />
+          </span>
+          <span className="flex flex-1 flex-col gap-[2px]">
+            <span className={`${box} flex-1`} />
+            <span className={`${box} h-3`} />
+          </span>
+        </span>
+      )}
+      {layout === 'carousel' && (
+        <span className="flex h-7 w-7 items-center gap-[2px] overflow-hidden">
+          <span className={`${box} h-6 w-2`} />
+          <span className={`${box} h-7 w-3.5`} />
+          <span className={`${box} h-6 w-2`} />
+        </span>
+      )}
+      {layout === 'highlight' && (
+        <span className="flex h-7 w-7 flex-col gap-[2px]">
+          <span className={`${box} h-4 w-full`} />
+          <span className="flex flex-1 gap-[2px]">
+            <span className={`${box} flex-1`} />
+            <span className={`${box} flex-1`} />
+            <span className={`${box} flex-1`} />
+          </span>
+        </span>
+      )}
+    </span>
+  );
+}
 
 export default function StepTheme({
   invitation,
@@ -111,6 +167,91 @@ export default function StepTheme({
           placeholder="Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir."
         />
       </div>
+
+      <fieldset className="border-t border-line pt-5">
+        <legend className="label">Galeri foto</legend>
+        <p className="hint mb-3">
+          Mengatur cara foto disusun di halaman undangan. Foto dan urutannya sendiri diatur di
+          langkah Galeri.
+        </p>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          {GALLERY_LAYOUTS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setConfig((prev) => ({ ...prev, gallery_layout: option }))}
+              className={cn(
+                'rounded-xl border-2 p-3 text-left transition',
+                config.gallery_layout === option
+                  ? 'border-brand-500 bg-brand-50'
+                  : 'border-line hover:border-brand-200',
+              )}
+            >
+              <div className="flex items-center gap-2.5">
+                <GalleryLayoutPreview layout={option} />
+                <span className="text-sm font-medium">{GALLERY_LAYOUT_LABELS[option]}</span>
+              </div>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted">
+                {GALLERY_LAYOUT_HINTS[option]}
+              </p>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="label" htmlFor="gallery_columns">
+              Jumlah kolom
+            </label>
+            <select
+              id="gallery_columns"
+              className="input"
+              value={config.gallery_columns}
+              disabled={config.gallery_layout === 'carousel'}
+              onChange={(e) =>
+                setConfig((prev) => ({
+                  ...prev,
+                  gallery_columns: Number(e.target.value) === 2 ? 2 : 3,
+                }))
+              }
+            >
+              <option value={2}>2 kolom</option>
+              <option value={3}>3 kolom</option>
+            </select>
+            <p className="hint">
+              {config.gallery_layout === 'carousel'
+                ? 'Tidak berlaku untuk layout geser samping.'
+                : 'Di layar ponsel selalu 2 kolom agar foto tidak terlalu kecil.'}
+            </p>
+          </div>
+
+          <div>
+            <label className="label" htmlFor="gallery_limit">
+              Foto yang ditampilkan
+            </label>
+            <select
+              id="gallery_limit"
+              className="input"
+              value={config.gallery_limit ?? 'all'}
+              onChange={(e) =>
+                setConfig((prev) => ({
+                  ...prev,
+                  gallery_limit: e.target.value === 'all' ? null : Number(e.target.value),
+                }))
+              }
+            >
+              <option value="all">Semua foto</option>
+              {[3, 4, 6, 8, 9, 12, 15].map((n) => (
+                <option key={n} value={n}>
+                  {n} foto pertama
+                </option>
+              ))}
+            </select>
+            <p className="hint">Sisanya tetap tersimpan, hanya tidak ikut ditampilkan.</p>
+          </div>
+        </div>
+      </fieldset>
 
       <div className="border-t border-line pt-5">
         <span className="label">Section undangan</span>
