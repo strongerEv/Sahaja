@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* --font-display & --font-body diinjeksi next/font di src/app/layout.tsx */
+  --theme: #a6753f;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: theme('colors.cream');
+  color: theme('colors.ink');
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-brand-500 text-white hover:bg-brand-600;
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-white text-ink hover:border-brand-300 hover:bg-brand-50;
+  }
+  .btn-sm {
+    @apply px-3.5 py-1.5 text-xs;
+  }
+  .card {
+    @apply rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(44,38,34,.04)];
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm outline-none transition placeholder:text-muted/60 focus:border-brand-400 focus:ring-2 focus:ring-brand-100;
+  }
+  .hint {
+    @apply mt-1 text-xs text-muted;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .section-title {
+    @apply font-display text-3xl tracking-wide text-ink;
+  }
+}
+
+/* ---- Halaman undangan publik: pakai warna tema per undangan ---- */
+.invitation-scope {
+  --theme: var(--invitation-theme, #a6753f);
+}
+.theme-text {
+  color: var(--theme);
+}
+.theme-bg {
+  background-color: var(--theme);
+}
+.theme-border {
+  border-color: var(--theme);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
