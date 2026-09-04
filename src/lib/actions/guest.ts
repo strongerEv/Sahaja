@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { randomSlug } from '@/lib/utils';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
 
 type Result = { error?: string; message?: string };
 
@@ -17,6 +18,8 @@ async function ctx() {
 }
 
 export async function addGuest(weddingId: string, formData: FormData): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
 
   const name = String(formData.get('name') ?? '').trim();
@@ -40,6 +43,8 @@ export async function importGuests(
   weddingId: string,
   rows: Array<{ name: string; category?: string; phone?: string }>,
 ): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
 
   const clean = rows
@@ -66,6 +71,8 @@ export async function importGuests(
 }
 
 export async function updateGuest(weddingId: string, guestId: string, formData: FormData): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
   const name = String(formData.get('name') ?? '').trim();
   if (!name) return { error: 'Nama tamu wajib diisi.' };
@@ -85,6 +92,8 @@ export async function updateGuest(weddingId: string, guestId: string, formData: 
 }
 
 export async function deleteGuest(weddingId: string, guestId: string): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
   const { error } = await supabase.from('guests').delete().eq('id', guestId);
   if (error) return { error: error.message };
@@ -94,6 +103,8 @@ export async function deleteGuest(weddingId: string, guestId: string): Promise<R
 
 /** Ganti slug tamu — dipakai kalau link lama terlanjur tersebar ke orang lain. */
 export async function regenerateGuestSlug(weddingId: string, guestId: string): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
   const { error } = await supabase
     .from('guests')
@@ -109,6 +120,8 @@ export async function toggleGuestbookVisibility(
   entryId: string,
   hidden: boolean,
 ): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
   const { error } = await supabase
     .from('guestbook_entries')
@@ -120,6 +133,8 @@ export async function toggleGuestbookVisibility(
 }
 
 export async function deleteGuestbookEntry(weddingId: string, entryId: string): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
   const { error } = await supabase.from('guestbook_entries').delete().eq('id', entryId);
   if (error) return { error: error.message };

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { createPublicClient } from '@/lib/supabase/public';
 import { formatIDR } from '@/lib/format';
+import { demoPackages, demoTemplates, isDemoMode } from '@/lib/demo/data';
+import DemoBanner from '@/components/DemoBanner';
 import type { Package, Template } from '@/lib/types/database';
 
 export const revalidate = 3600;
@@ -32,16 +34,29 @@ const FEATURES = [
   },
 ];
 
-export default async function LandingPage() {
-  const supabase = createPublicClient();
+async function loadContent() {
+  if (isDemoMode) {
+    return { templates: demoTemplates, packages: demoPackages };
+  }
 
+  const supabase = createPublicClient();
   const [{ data: templates }, { data: packages }] = await Promise.all([
     supabase.from('templates').select('*').eq('is_active', true).limit(6),
     supabase.from('packages').select('*').eq('is_active', true).order('price_idr'),
   ]);
 
+  return {
+    templates: (templates ?? []) as Template[],
+    packages: (packages ?? []) as Package[],
+  };
+}
+
+export default async function LandingPage() {
+  const { templates, packages } = await loadContent();
+
   return (
     <main>
+      {isDemoMode && <DemoBanner />}
       <header className="sticky top-0 z-40 border-b border-line/70 bg-cream/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
           <Link href="/" className="font-display text-2xl tracking-[0.2em] text-brand-600">
@@ -97,7 +112,7 @@ export default async function LandingPage() {
           Elegant, floral, minimalis, islami, adat, sampai modern — warna dan font bisa diubah.
         </p>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {(templates as Template[] | null)?.map((t) => (
+          {templates.map((t) => (
             <article key={t.id} className="overflow-hidden rounded-2xl border border-line bg-white">
               {t.thumbnail_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -122,7 +137,7 @@ export default async function LandingPage() {
               </div>
             </article>
           ))}
-          {!templates?.length && (
+          {templates.length === 0 && (
             <p className="col-span-full rounded-2xl border border-dashed border-line p-8 text-center text-sm text-muted">
               Template belum tersedia. Jalankan migrasi & seed Supabase terlebih dahulu.
             </p>
@@ -134,7 +149,7 @@ export default async function LandingPage() {
         <div className="mx-auto max-w-5xl px-5">
           <h2 className="section-title text-center">Paket</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {(packages as Package[] | null)?.map((p) => (
+            {packages.map((p) => (
               <div
                 key={p.id}
                 className={

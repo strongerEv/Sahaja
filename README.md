@@ -16,7 +16,30 @@ diaktifkan nanti tanpa migrasi besar — tabelnya sudah ada sejak awal.
 | Database & Auth | Supabase (Postgres, Auth, Storage, RLS) |
 | Export | jsPDF + jspdf-autotable (PDF), SheetJS (Excel) |
 
-## Menjalankan secara lokal
+## Mode demo (tanpa Supabase)
+
+Aplikasi bisa dijalankan **tanpa menyiapkan Supabase sama sekali**. Selama
+`NEXT_PUBLIC_SUPABASE_URL` belum diisi, seluruh halaman otomatis memakai data
+contoh — berguna untuk melihat hasilnya lebih dulu, termasuk saat baru deploy ke
+Vercel tapi project Supabase belum dibuat.
+
+```bash
+npm install
+npm run dev        # langsung jalan, tidak perlu .env.local
+```
+
+Yang bisa dicoba: `/u/rizky-ayu?to=k7m2xq9p` (undangan dengan link personal
+tamu), `/dashboard` (rekap RSVP, daftar tamu, statistik), dan `/admin`.
+Halaman `/demo` merangkum isi mode ini beserta langkah mengaktifkan penyimpanan.
+
+Di mode demo semua data hanya dibaca: setiap tombol simpan menjawab dengan
+penjelasan singkat, dan unggah media dinonaktifkan karena membutuhkan Supabase
+Storage. Sebuah banner gelap di atas halaman memastikan tidak ada yang mengira
+datanya nyata. Begitu kredensial Supabase diisi, mode demo mati sendiri —
+tidak ada kode yang perlu diubah. Untuk memaksanya tetap aktif, set
+`NEXT_PUBLIC_DEMO_MODE=1`.
+
+## Menjalankan dengan Supabase
 
 ```bash
 npm install
@@ -60,6 +83,7 @@ Menu **Admin platform** akan muncul di dashboard.
 src/
 ├── app/
 │   ├── page.tsx                    landing page (ISR, 1 jam)
+│   ├── demo/                       penjelasan mode demo & cara mengaktifkan Supabase
 │   ├── login|register/             autentikasi Supabase
 │   ├── u/[slug]/                   halaman undangan publik — SSR, tanpa middleware auth
 │   ├── dashboard/
@@ -79,6 +103,7 @@ src/
     ├── actions/                    server actions (wedding, invitation, guest, admin)
     ├── types/database.ts           tipe domain
     ├── i18n.ts                     kamus ID/EN untuk halaman undangan
+    ├── demo/data.ts                data contoh untuk mode tanpa Supabase
     └── export.ts                   PDF, Excel, dan parser file tamu
 supabase/
 ├── migrations/                     skema, RLS, RPC, seed, storage

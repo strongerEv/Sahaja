@@ -1,10 +1,15 @@
 import { createClient } from '@/lib/supabase/server';
 import { formatShortDate } from '@/lib/format';
+import { demoPlatformUsers, isDemoMode } from '@/lib/demo/data';
 import type { AppUser } from '@/lib/types/database';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminUsersPage() {
+type PlatformUserRow = AppUser & { weddings: Array<{ id: string }> | null };
+
+async function loadUsers(): Promise<PlatformUserRow[]> {
+  if (isDemoMode) return demoPlatformUsers;
+
   const supabase = createClient();
   const { data } = await supabase
     .from('users')
@@ -12,7 +17,11 @@ export default async function AdminUsersPage() {
     .order('created_at', { ascending: false })
     .limit(200);
 
-  const users = (data ?? []) as Array<AppUser & { weddings: Array<{ id: string }> | null }>;
+  return (data ?? []) as PlatformUserRow[];
+}
+
+export default async function AdminUsersPage() {
+  const users = await loadUsers();
 
   return (
     <div className="card">

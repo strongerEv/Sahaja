@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { formatShortDate } from '@/lib/format';
+import { demoWeddings, isDemoMode } from '@/lib/demo/data';
 import type { Wedding } from '@/lib/types/database';
 
 export const metadata = { title: 'Dashboard' };
@@ -10,15 +11,20 @@ type WeddingRow = Wedding & {
   invitations: Array<{ slug: string; is_published: boolean; view_count: number }> | null;
 };
 
-export default async function DashboardHome() {
-  const supabase = createClient();
+async function loadWeddings(): Promise<WeddingRow[]> {
+  if (isDemoMode) return demoWeddings;
 
+  const supabase = createClient();
   const { data } = await supabase
     .from('weddings')
     .select('*, invitations(slug, is_published, view_count)')
     .order('created_at', { ascending: false });
 
-  const weddings = (data ?? []) as WeddingRow[];
+  return (data ?? []) as WeddingRow[];
+}
+
+export default async function DashboardHome() {
+  const weddings = await loadWeddings();
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10">

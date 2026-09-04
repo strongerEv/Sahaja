@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPublicClient } from '@/lib/supabase/public';
+import { isDemoMode } from '@/lib/demo/data';
 import { getDictionary } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import type {
@@ -52,7 +53,7 @@ export default function InvitationView({
 
   // Catat kunjungan sekali per pemuatan halaman, hanya untuk undangan live.
   useEffect(() => {
-    if (!opened || tracked.current || preview) return;
+    if (!opened || tracked.current || preview || isDemoMode) return;
     tracked.current = true;
 
     const supabase = createPublicClient();

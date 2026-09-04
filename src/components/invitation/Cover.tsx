@@ -23,14 +23,12 @@ export default function Cover({
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center">
       {coverImage && (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={coverImage}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            fetchPriority="high"
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-ink bg-cover bg-center"
+            style={{ backgroundImage: `url(${coverImage})` }}
           />
-          <div className="absolute inset-0 bg-black/45" />
+          <div aria-hidden className="absolute inset-0 bg-black/45" />
         </>
       )}
 

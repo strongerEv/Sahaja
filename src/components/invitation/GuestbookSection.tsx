@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createPublicClient } from '@/lib/supabase/public';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
 import type { Dict } from '@/lib/i18n';
 import type { GuestbookEntry } from '@/lib/types/database';
 import { formatDateTime } from '@/lib/format';
@@ -39,18 +40,20 @@ export default function GuestbookSection({
     setError(null);
     setStatus('sending');
 
-    const supabase = createPublicClient();
-    const { error: rpcError } = await supabase.rpc('submit_guestbook_entry', {
-      p_invitation_slug: invitationSlug,
-      p_name: name.trim(),
-      p_message: message.trim(),
-      p_guest_slug: guestSlug,
-    });
+    if (!isDemoMode) {
+      const supabase = createPublicClient();
+      const { error: rpcError } = await supabase.rpc('submit_guestbook_entry', {
+        p_invitation_slug: invitationSlug,
+        p_name: name.trim(),
+        p_message: message.trim(),
+        p_guest_slug: guestSlug,
+      });
 
-    if (rpcError) {
-      setError(rpcError.message || dict.error);
-      setStatus('idle');
-      return;
+      if (rpcError) {
+        setError(rpcError.message || dict.error);
+        setStatus('idle');
+        return;
+      }
     }
 
     // Tampilkan ucapan sendiri langsung tanpa perlu reload.
@@ -103,9 +106,10 @@ export default function GuestbookSection({
 
         {error && <p className="rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</p>}
         {status === 'done' && (
-          <p className="rounded-xl bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-800">
-            {dict.guestbookThanks}
-          </p>
+          <div className="rounded-xl bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-800">
+            <p>{dict.guestbookThanks}</p>
+            {isDemoMode && <p className="mt-1 text-xs text-emerald-700/80">{DEMO_NOTICE}</p>}
+          </div>
         )}
 
         <button

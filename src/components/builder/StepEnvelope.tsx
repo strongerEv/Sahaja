@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import StepForm, { type StepSaveProps } from './StepForm';
 import { randomSlug } from '@/lib/utils';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
 import type { DigitalEnvelopeConfig } from '@/lib/types/database';
 
 export default function StepEnvelope({
@@ -18,6 +19,12 @@ export default function StepEnvelope({
 
   async function uploadQris(file: File) {
     setError(null);
+
+    if (isDemoMode) {
+      setError(`${DEMO_NOTICE} Unggah QRIS membutuhkan Supabase Storage.`);
+      return;
+    }
+
     setUploading(true);
     try {
       const supabase = createClient();

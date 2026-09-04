@@ -2,24 +2,34 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import AdminNav from '@/components/admin/AdminNav';
+import DemoBanner from '@/components/DemoBanner';
+import { demoUser, isDemoMode } from '@/lib/demo/data';
 
 export const metadata = { title: 'Admin platform' };
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+async function loadRole() {
+  if (isDemoMode) return demoUser.role_platform;
+
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: profile } = await supabase
+  const { data } = await supabase
     .from('users')
     .select('role_platform')
     .eq('id', user.id)
     .maybeSingle();
 
+  return data?.role_platform ?? 'user';
+}
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const role = await loadRole();
+
   // RLS sudah membatasi datanya, tapi halamannya juga tidak perlu terbuka.
-  if (profile?.role_platform !== 'platform_admin') {
+  if (role !== 'platform_admin') {
     return (
       <main className="mx-auto max-w-md px-5 py-24 text-center">
         <h1 className="font-display text-3xl">Akses ditolak</h1>
@@ -35,6 +45,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen">
+      {isDemoMode && <DemoBanner />}
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
           <div className="flex items-center gap-3">

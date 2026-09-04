@@ -4,6 +4,15 @@ import { createPublicClient } from '@/lib/supabase/public';
 import { createClient } from '@/lib/supabase/server';
 import InvitationView from '@/components/invitation/InvitationView';
 import { resolveSections } from '@/lib/utils';
+import {
+  DEMO_SLUG,
+  demoEnvelope,
+  demoGuestbook,
+  demoGuests,
+  demoInvitation,
+  demoMedia,
+  isDemoMode,
+} from '@/lib/demo/data';
 import type {
   DigitalEnvelopeConfig,
   GuestbookEntry,
@@ -18,6 +27,10 @@ type Params = { params: { slug: string }; searchParams: { to?: string; preview?:
 export const revalidate = 60;
 
 async function loadInvitation(slug: string, preview: boolean) {
+  if (isDemoMode) {
+    return slug === DEMO_SLUG ? demoInvitation : null;
+  }
+
   if (preview) {
     // Pratinjau draft: pakai sesi pemilik, RLS yang menentukan boleh/tidaknya.
     const supabase = createClient();
@@ -59,35 +72,43 @@ export async function generateMetadata({ params, searchParams }: Params): Promis
   };
 }
 
-export default async function PublicInvitationPage({ params, searchParams }: Params) {
-  const preview = searchParams.preview === '1';
-  const invitation = await loadInvitation(params.slug, preview);
-  if (!invitation) notFound();
+/** Isi halaman selain undangan itu sendiri: media, amplop, ucapan, dan tamu. */
+async function loadPageData(slug: string, invitationId: string, guestSlug: string | null) {
+  if (isDemoMode) {
+    const guest = guestSlug
+      ? demoGuests.find((candidate) => candidate.unique_slug === guestSlug)
+      : null;
+
+    return {
+      media: demoMedia,
+      envelope: demoEnvelope,
+      entries: demoGuestbook.filter((entry) => !entry.is_hidden),
+      guest: guest ? { id: guest.id, name: guest.name } : null,
+    };
+  }
 
   const supabase = createPublicClient();
-  const guestSlug = searchParams.to?.trim() || null;
-
   const [{ data: media }, { data: envelope }, { data: entries }, guestResult] = await Promise.all([
     supabase
       .from('invitation_media')
       .select('*')
-      .eq('invitation_id', invitation.id)
+      .eq('invitation_id', invitationId)
       .order('order_index'),
     supabase
       .from('digital_envelopes_config')
       .select('*')
-      .eq('invitation_id', invitation.id)
+      .eq('invitation_id', invitationId)
       .maybeSingle(),
     supabase
       .from('guestbook_entries')
       .select('id, name, message, created_at')
-      .eq('invitation_id', invitation.id)
+      .eq('invitation_id', invitationId)
       .eq('is_hidden', false)
       .order('created_at', { ascending: false })
       .limit(50),
     guestSlug
       ? supabase.rpc('get_public_guest', {
-          p_invitation_slug: params.slug,
+          p_invitation_slug: slug,
           p_guest_slug: guestSlug,
         })
       : Promise.resolve({ data: null }),
@@ -95,14 +116,34 @@ export default async function PublicInvitationPage({ params, searchParams }: Par
 
   const guestRow = Array.isArray(guestResult.data) ? guestResult.data[0] : null;
 
+  return {
+    media: (media ?? []) as InvitationMedia[],
+    envelope: (envelope ?? null) as DigitalEnvelopeConfig | null,
+    entries: (entries ?? []) as GuestbookEntry[],
+    guest: guestRow ? { id: guestRow.guest_id, name: guestRow.guest_name } : null,
+  };
+}
+
+export default async function PublicInvitationPage({ params, searchParams }: Params) {
+  const preview = searchParams.preview === '1';
+  const invitation = await loadInvitation(params.slug, preview);
+  if (!invitation) notFound();
+
+  const guestSlug = searchParams.to?.trim() || null;
+  const { media, envelope, entries, guest } = await loadPageData(
+    params.slug,
+    invitation.id,
+    guestSlug,
+  );
+
   return (
     <InvitationView
       invitation={invitation}
       sections={resolveSections(invitation.sections_config_json)}
-      media={(media ?? []) as InvitationMedia[]}
-      envelope={(envelope ?? null) as DigitalEnvelopeConfig | null}
-      entries={(entries ?? []) as GuestbookEntry[]}
-      guest={guestRow ? { id: guestRow.guest_id, name: guestRow.guest_name } : null}
+      media={media}
+      envelope={envelope}
+      entries={entries}
+      guest={guest}
       guestSlug={guestSlug}
       preview={preview && !invitation.is_published}
     />

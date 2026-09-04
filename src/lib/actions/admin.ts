@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
 
 type Result = { error?: string; message?: string };
 
@@ -37,6 +38,8 @@ function slugify(value: string) {
 }
 
 export async function saveTemplate(templateId: string | null, formData: FormData): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await adminClient();
 
   const name = String(formData.get('name') ?? '').trim();
@@ -66,6 +69,8 @@ export async function saveTemplate(templateId: string | null, formData: FormData
 }
 
 export async function deleteTemplate(templateId: string): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await adminClient();
   const { error } = await supabase.from('templates').delete().eq('id', templateId);
   if (error) return { error: error.message };
@@ -74,6 +79,8 @@ export async function deleteTemplate(templateId: string): Promise<Result> {
 }
 
 export async function savePackage(packageId: string | null, formData: FormData): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await adminClient();
 
   const name = String(formData.get('name') ?? '').trim();

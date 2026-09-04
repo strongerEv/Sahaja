@@ -1,24 +1,41 @@
 import { createClient } from '@/lib/supabase/server';
 import { formatDateTime } from '@/lib/format';
+import { demoGuests, demoInvitation, demoVisits, isDemoMode } from '@/lib/demo/data';
 import type { Guest } from '@/lib/types/database';
 
 export const metadata = { title: 'Statistik kunjungan' };
 export const dynamic = 'force-dynamic';
 
-export default async function StatsPage({ params }: { params: { weddingId: string } }) {
-  const supabase = createClient();
+type VisitRow = { id: string; created_at: string; guest_id: string | null };
 
+async function loadStats(weddingId: string): Promise<{
+  invitation: { view_count: number; published_at: string | null } | null;
+  guests: Guest[];
+  visits: VisitRow[];
+}> {
+  if (isDemoMode) {
+    return {
+      invitation: {
+        view_count: demoInvitation.view_count,
+        published_at: demoInvitation.published_at,
+      },
+      guests: demoGuests,
+      visits: demoVisits,
+    };
+  }
+
+  const supabase = createClient();
   const { data: invitation } = await supabase
     .from('invitations')
     .select('id, view_count, published_at')
-    .eq('wedding_id', params.weddingId)
+    .eq('wedding_id', weddingId)
     .maybeSingle();
 
-  const [{ data: guests }, { data: visits }] = await Promise.all([
+  const [{ data: guests }, visitResult] = await Promise.all([
     supabase
       .from('guests')
       .select('*')
-      .eq('wedding_id', params.weddingId)
+      .eq('wedding_id', weddingId)
       .order('opened_at', { ascending: false, nullsFirst: false }),
     invitation
       ? supabase
@@ -27,13 +44,22 @@ export default async function StatsPage({ params }: { params: { weddingId: strin
           .eq('invitation_id', invitation.id)
           .order('created_at', { ascending: false })
           .limit(500)
-      : Promise.resolve({ data: [] as Array<{ id: string; created_at: string; guest_id: string | null }> }),
+      : Promise.resolve({ data: [] as VisitRow[] }),
   ]);
 
-  const guestList = (guests ?? []) as Guest[];
+  return {
+    invitation,
+    guests: (guests ?? []) as Guest[],
+    visits: (visitResult.data ?? []) as VisitRow[],
+  };
+}
+
+export default async function StatsPage({ params }: { params: { weddingId: string } }) {
+  const { invitation, guests: guestList, visits } = await loadStats(params.weddingId);
+
   const opened = guestList.filter((g) => g.is_opened);
   const notOpened = guestList.filter((g) => !g.is_opened);
-  const anonymousVisits = (visits ?? []).filter((v) => !v.guest_id).length;
+  const anonymousVisits = visits.filter((visit) => !visit.guest_id).length;
 
   // Kunjungan per hari (7 hari terakhir) untuk grafik batang sederhana.
   const buckets = new Map<string, number>();
@@ -42,7 +68,7 @@ export default async function StatsPage({ params }: { params: { weddingId: strin
     day.setDate(day.getDate() - i);
     buckets.set(day.toISOString().slice(0, 10), 0);
   }
-  for (const visit of visits ?? []) {
+  for (const visit of visits) {
     const key = visit.created_at.slice(0, 10);
     if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
   }

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { isDemoMode } from '@/lib/demo/data';
 
 export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const router = useRouter();
@@ -22,6 +23,13 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     setError(null);
     setNotice(null);
     setLoading(true);
+
+    // Mode demo: tidak ada Supabase Auth, jadi langsung masuk ke dashboard contoh.
+    if (isDemoMode) {
+      router.push(next);
+      return;
+    }
+
     const supabase = createClient();
 
     try {
@@ -52,6 +60,23 @@ export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (isDemoMode) {
+    return (
+      <div className="card space-y-4 text-center">
+        <p className="text-sm leading-relaxed text-muted">
+          Mode demo aktif — belum ada Supabase, jadi tidak ada pendaftaran atau kata sandi.
+          Masuk saja untuk melihat dashboard beserta data contohnya.
+        </p>
+        <button type="button" className="btn-primary w-full" onClick={() => router.push(next)}>
+          Masuk ke dashboard demo
+        </button>
+        <Link href="/demo" className="block text-sm text-brand-600 underline">
+          Cara mengaktifkan penyimpanan
+        </Link>
+      </div>
+    );
   }
 
   return (

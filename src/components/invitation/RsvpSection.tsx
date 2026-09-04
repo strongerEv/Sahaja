@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createPublicClient } from '@/lib/supabase/public';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
 import type { Dict } from '@/lib/i18n';
 import { SectionShell } from './Sections';
 import { cn } from '@/lib/utils';
@@ -45,6 +46,12 @@ export default function RsvpSection({
     setError(null);
     setStatus('sending');
 
+    // Mode demo: tampilkan hasilnya, tapi jangan pura-pura menyimpan.
+    if (isDemoMode) {
+      setStatus('done');
+      return;
+    }
+
     const supabase = createPublicClient();
     const { error: rpcError } = await supabase.rpc('submit_rsvp', {
       p_invitation_slug: invitationSlug,
@@ -67,9 +74,10 @@ export default function RsvpSection({
       <p className="mb-6 text-sm leading-relaxed text-muted">{dict.rsvpIntro}</p>
 
       {status === 'done' ? (
-        <p className="rounded-2xl bg-emerald-50 px-5 py-6 text-sm text-emerald-800">
-          {dict.rsvpThanks}
-        </p>
+        <div className="rounded-2xl bg-emerald-50 px-5 py-6 text-sm text-emerald-800">
+          <p>{dict.rsvpThanks}</p>
+          {isDemoMode && <p className="mt-2 text-xs text-emerald-700/80">{DEMO_NOTICE}</p>}
+        </div>
       ) : (
         <form onSubmit={submit} className="space-y-4 text-left">
           <p className="text-center text-sm">

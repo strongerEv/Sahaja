@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { fromDatetimeLocal } from '@/lib/format';
 import type { LoveStoryItem, SectionsConfig } from '@/lib/types/database';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
 
 type Result = { error?: string; message?: string };
 
@@ -29,6 +30,8 @@ export async function saveInvitationStep(
   step: string,
   formData: FormData,
 ): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
   let patch: Record<string, unknown> = {};
 
@@ -150,6 +153,8 @@ export async function togglePublish(
   invitationId: string,
   publish: boolean,
 ): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
 
   if (publish) {
@@ -190,6 +195,8 @@ export async function addMedia(
   invitationId: string,
   items: Array<{ url: string; type: 'photo' | 'video'; caption?: string }>,
 ): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
   if (!items.length) return { message: 'Tidak ada media baru.' };
 
@@ -215,6 +222,8 @@ export async function addMedia(
 }
 
 export async function deleteMedia(weddingId: string, mediaId: string): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
   const { error } = await supabase.from('invitation_media').delete().eq('id', mediaId);
   if (error) return { error: error.message };
@@ -227,6 +236,8 @@ export async function reorderMedia(
   mediaId: string,
   direction: 'up' | 'down',
 ): Promise<Result> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const supabase = await ctx();
 
   const { data: current } = await supabase

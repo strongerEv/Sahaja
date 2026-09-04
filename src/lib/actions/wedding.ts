@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { DEFAULT_SECTIONS, randomSlug, slugifyCouple } from '@/lib/utils';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
 
 export type ActionState = { error?: string; message?: string } | null;
 
@@ -34,6 +35,8 @@ async function uniqueInvitationSlug(
 }
 
 export async function createWedding(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const { supabase, user } = await requireUser();
 
   const groom = String(formData.get('groom_name') ?? '').trim();
@@ -101,6 +104,8 @@ export async function createWedding(_prev: ActionState, formData: FormData): Pro
 }
 
 export async function updateWedding(weddingId: string, formData: FormData) {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const { supabase } = await requireUser();
 
   const { error } = await supabase
@@ -120,6 +125,8 @@ export async function updateWedding(weddingId: string, formData: FormData) {
 }
 
 export async function deleteWedding(weddingId: string) {
+  if (isDemoMode) return { error: DEMO_NOTICE };
+
   const { supabase } = await requireUser();
   const { error } = await supabase.from('weddings').delete().eq('id', weddingId);
   if (error) return { error: error.message };

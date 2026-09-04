@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { addMedia, deleteMedia, reorderMedia } from '@/lib/actions/invitation';
 import { cn, randomSlug } from '@/lib/utils';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
 import type { Invitation, InvitationMedia } from '@/lib/types/database';
 
 const BUCKET = 'invitation-media';
@@ -32,6 +33,12 @@ export default function StepGallery({
     if (!list.length) return;
 
     setError(null);
+
+    if (isDemoMode) {
+      setError(`${DEMO_NOTICE} Unggah media membutuhkan Supabase Storage.`);
+      return;
+    }
+
     setUploading(true);
     const supabase = createClient();
     const uploaded: Array<{ url: string; type: 'photo' | 'video' }> = [];

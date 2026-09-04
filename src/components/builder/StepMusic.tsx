@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import StepForm, { type StepSaveProps } from './StepForm';
 import { randomSlug } from '@/lib/utils';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
 import type { Invitation } from '@/lib/types/database';
 
 const LIBRARY = [
@@ -34,6 +35,12 @@ export default function StepMusic({
 
   async function uploadAudio(file: File) {
     setError(null);
+
+    if (isDemoMode) {
+      setError(`${DEMO_NOTICE} Unggah audio membutuhkan Supabase Storage.`);
+      return;
+    }
+
     setUploading(true);
     try {
       const supabase = createClient();
