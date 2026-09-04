@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { addMedia, deleteMedia, reorderMedia } from '@/lib/actions/invitation';
 import { cn, randomSlug } from '@/lib/utils';
-import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/flag';
 import type { Invitation, InvitationMedia } from '@/lib/types/database';
 
 const BUCKET = 'invitation-media';

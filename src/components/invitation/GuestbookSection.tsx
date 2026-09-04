@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createPublicClient } from '@/lib/supabase/public';
-import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/flag';
 import type { Dict } from '@/lib/i18n';
 import type { GuestbookEntry } from '@/lib/types/database';
 import { formatDateTime } from '@/lib/format';

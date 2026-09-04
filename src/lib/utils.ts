@@ -1,3 +1,4 @@
+import { siteUrl } from '@/lib/site-url';
 import type { SectionKey, SectionsConfig } from '@/lib/types/database';
 
 export function cn(...classes: Array<string | false | null | undefined>) {
@@ -86,9 +87,7 @@ export function resolveSections(config: Partial<SectionsConfig> | null | undefin
   return { ...merged, order: [...order, ...missing] };
 }
 
-export function siteUrl() {
-  return (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
-}
+export { siteUrl };
 
 export function invitationUrl(slug: string, guestSlug?: string | null) {
   const base = `${siteUrl()}/u/${slug}`;

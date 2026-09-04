@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPublicClient } from '@/lib/supabase/public';
-import { isDemoMode } from '@/lib/demo/data';
+import { isDemoMode } from '@/lib/demo/flag';
 import { getDictionary } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import type {

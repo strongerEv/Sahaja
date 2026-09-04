@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { isDemoMode } from '@/lib/demo/data';
+import { isDemoMode } from '@/lib/demo/flag';
 
 export default function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const router = useRouter();

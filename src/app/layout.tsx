@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Inter } from 'next/font/google';
+import { siteUrlObject } from '@/lib/site-url';
 import './globals.css';
 
 // Font di-self-host oleh Next supaya halaman undangan tidak menunggu
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   },
   description:
     'Buat undangan pernikahan digital yang rapi dan personal: RSVP, buku tamu, amplop digital, dan rekap tamu dalam satu tempat.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  metadataBase: siteUrlObject(),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

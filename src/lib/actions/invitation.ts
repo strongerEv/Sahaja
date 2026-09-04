@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { fromDatetimeLocal } from '@/lib/format';
 import type { LoveStoryItem, SectionsConfig } from '@/lib/types/database';
-import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/flag';
 
 type Result = { error?: string; message?: string };
 

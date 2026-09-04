@@ -11,6 +11,7 @@
  */
 
 import { DEFAULT_SECTIONS } from '@/lib/utils';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/flag';
 import type {
   AppUser,
   DigitalEnvelopeConfig,
@@ -24,11 +25,7 @@ import type {
   Wedding,
 } from '@/lib/types/database';
 
-export const isDemoMode =
-  process.env.NEXT_PUBLIC_DEMO_MODE === '1' || !process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-export const DEMO_NOTICE =
-  'Mode demo aktif — perubahan tidak disimpan. Isi kredensial Supabase di environment untuk mengaktifkan penyimpanan.';
+export { DEMO_NOTICE, isDemoMode };
 
 export const DEMO_WEDDING_ID = 'demo-wedding';
 export const DEMO_INVITATION_ID = 'demo-invitation';

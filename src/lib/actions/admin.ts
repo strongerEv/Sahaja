@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/flag';
 
 type Result = { error?: string; message?: string };
 

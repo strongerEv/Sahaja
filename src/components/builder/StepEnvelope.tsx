@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import StepForm, { type StepSaveProps } from './StepForm';
 import { randomSlug } from '@/lib/utils';
-import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/data';
+import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/flag';
 import type { DigitalEnvelopeConfig } from '@/lib/types/database';
 
 export default function StepEnvelope({
