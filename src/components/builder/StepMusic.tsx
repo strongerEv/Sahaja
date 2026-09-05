@@ -1,14 +1,14 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import StepForm, { type StepSaveProps } from './StepForm';
 import { randomSlug } from '@/lib/utils';
+import { describeMusicSource, parseMusicUrl } from '@/lib/music';
 import { DEMO_NOTICE, isDemoMode } from '@/lib/demo/flag';
 import type { Invitation } from '@/lib/types/database';
 
 const LIBRARY = [
-  { name: 'Tanpa musik', url: '' },
   {
     name: 'Canon in D — Pachelbel',
     url: 'https://upload.wikimedia.org/wikipedia/commons/4/4c/Canon_in_D_Major_-_Pachelbel%27s_Canon.ogg',
@@ -32,6 +32,9 @@ export default function StepMusic({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const source = useMemo(() => parseMusicUrl(url), [url]);
+  const linkInvalid = url.trim().length > 0 && source === null;
 
   async function uploadAudio(file: File) {
     setError(null);
@@ -62,15 +65,47 @@ export default function StepMusic({
   return (
     <StepForm
       title="Musik latar"
-      description="Musik diputar setelah tamu menekan tombol buka undangan — browser memang tidak mengizinkan autoplay dengan suara."
+      description="Musik menyala begitu tamu menekan tombol Buka Undangan. Browser memang tidak mengizinkan suara menyala sebelum tamu menyentuh layar."
       saving={saving}
       onSave={onSave}
     >
-      <input type="hidden" name="music_url" value={url} />
+      <input type="hidden" name="music_url" value={source ? url.trim() : ''} />
 
       <div>
-        <span className="label">Library bawaan</span>
+        <label className="label" htmlFor="music_link">
+          Tempel tautan lagu
+        </label>
+        <input
+          id="music_link"
+          type="url"
+          className="input"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://youtu.be/… atau https://…/lagu.mp3"
+        />
+        <p className={linkInvalid ? 'mt-1 text-xs text-red-700' : 'hint'}>
+          {linkInvalid
+            ? 'Tautan tidak dikenali. Pakai tautan video YouTube, atau tautan langsung ke berkas audio.'
+            : describeMusicSource(source)}
+        </p>
+        <p className="hint">
+          YouTube paling praktis: cukup salin tautan videonya, tidak perlu punya berkas lagunya.
+        </p>
+      </div>
+
+      <div className="border-t border-line pt-5">
+        <span className="label">Atau pilih dari library</span>
         <div className="space-y-2">
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-line px-3.5 py-2.5 text-sm hover:border-brand-300">
+            <input
+              type="radio"
+              name="music_choice"
+              checked={url.trim() === ''}
+              onChange={() => setUrl('')}
+              className="accent-brand-500"
+            />
+            Tanpa musik
+          </label>
           {LIBRARY.map((track) => (
             <label
               key={track.name}
@@ -111,11 +146,28 @@ export default function StepMusic({
 
       {error && <p className="rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</p>}
 
-      {url && (
+      {source?.kind === 'audio' && (
         <div className="border-t border-line pt-5">
           <span className="label">Pratinjau</span>
-          <audio src={url} controls className="w-full" />
-          <p className="hint break-all">{url}</p>
+          <audio src={source.url} controls className="w-full" />
+        </div>
+      )}
+
+      {source?.kind === 'youtube' && (
+        <div className="border-t border-line pt-5">
+          <span className="label">Pratinjau</span>
+          <div className="overflow-hidden rounded-xl border border-line">
+            <iframe
+              title="Pratinjau musik"
+              src={`https://www.youtube.com/embed/${source.videoId}`}
+              className="aspect-video w-full"
+              allow="encrypted-media"
+              allowFullScreen
+            />
+          </div>
+          <p className="hint">
+            Di halaman undangan, videonya tidak ditampilkan — hanya suaranya yang diputar.
+          </p>
         </div>
       )}
     </StepForm>

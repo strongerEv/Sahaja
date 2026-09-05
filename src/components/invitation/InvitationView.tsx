@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPublicClient } from '@/lib/supabase/public';
 import { isDemoMode } from '@/lib/demo/flag';
 import { getDictionary } from '@/lib/i18n';
+import { parseMusicUrl } from '@/lib/music';
 import { cn } from '@/lib/utils';
 import type {
   DigitalEnvelopeConfig,
@@ -25,6 +26,7 @@ import {
 import RsvpSection from './RsvpSection';
 import GuestbookSection from './GuestbookSection';
 import EnvelopeSection from './EnvelopeSection';
+import BackgroundMusic from './BackgroundMusic';
 
 export default function InvitationView({
   invitation,
@@ -48,8 +50,10 @@ export default function InvitationView({
   const dict = getDictionary(invitation.language);
   const [opened, setOpened] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const tracked = useRef(false);
+
+  // Mendukung tautan YouTube maupun berkas audio langsung.
+  const music = useMemo(() => parseMusicUrl(invitation.music_url), [invitation.music_url]);
 
   // Catat kunjungan sekali per pemuatan halaman, hanya untuk undangan live.
   useEffect(() => {
@@ -87,24 +91,11 @@ export default function InvitationView({
   function handleOpen() {
     setOpened(true);
     document.body.style.overflow = '';
-    if (invitation.music_url && audioRef.current) {
-      audioRef.current.play().then(
-        () => setPlaying(true),
-        () => setPlaying(false),
-      );
-    }
+    // Sentuhan tombol inilah yang membuat browser mengizinkan suara menyala.
+    if (music) setPlaying(true);
   }
 
-  function toggleMusic() {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (audio.paused) {
-      void audio.play().then(() => setPlaying(true));
-    } else {
-      audio.pause();
-      setPlaying(false);
-    }
-  }
+  const handleBlocked = useCallback(() => setPlaying(false), []);
 
   const coverImage = invitation.cover_image_url ?? media.find((m) => m.type === 'photo')?.url ?? null;
 
@@ -189,13 +180,13 @@ export default function InvitationView({
         </main>
       )}
 
-      {invitation.music_url && (
+      {music && (
         <>
-          <audio ref={audioRef} src={invitation.music_url} loop preload="none" />
+          <BackgroundMusic source={music} playing={playing} onBlocked={handleBlocked} />
           {opened && (
             <button
               type="button"
-              onClick={toggleMusic}
+              onClick={() => setPlaying((value) => !value)}
               aria-label={playing ? dict.musicOn : dict.musicOff}
               className="theme-bg fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg"
             >
